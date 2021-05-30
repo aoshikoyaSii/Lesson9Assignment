@@ -13,156 +13,98 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 
 import java.sql.Array;
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
 public class DatePickerTest extends TestBase {
-    String[] monthArray = {"January","February","March","April","May","June","July","August","September","October","November","December"};
+
     @Test
     void shouldPickDate() throws Exception{
+       openBrowser();
+       openCalender();
 
-        getDriver().get("https://seleniumui.moderntester.pl/datepicker.php");
-//        selectDate(29,5,2021);
-        TargetYear(2027, 6);
-        Thread.sleep(5000);
+       TargetYear("January 2021", 20, 2021);
+       TargetYear("February 2021", 2, 2021);
+       TargetYear("February 2021", 2, 2021);
+       TargetYear("November 2020", 1, 2020);
+       TargetYear("December 2020", 1, 2020);
+       TargetYear("December 2020", 25, 2020);
+       TargetYear("February 2022", 1, 2022);
+        TodayUsingLocalDate();
     }
 
-
-    void selectDate(int day, int month, int year) throws Exception{
-        getDriver().findElement(By.xpath("//input[@id='datepicker']")).click();
-        TargetMonth(month);
-        TargetDays(day);
-        TargetYear(year,6);
-        Thread.sleep(8000);
-    }
-
-
-    //function target day
-    int TargetDays(int choiceDay) {
+    public void TargetDays(int choiceDay) throws Exception{
         List<WebElement> days = getDriver().findElements(By.xpath("//a[@class='ui-state-default']"));
         for (WebElement day : days) {
             if (Integer.parseInt(day.getText()) == choiceDay) {
                 day.click();
+                Thread.sleep(3000);
                 break;
             }
         }
-        return choiceDay;
     }
 
+    void TodayUsingLocalDate() throws Exception {
+        LocalDateTime today = LocalDateTime.now();
+        String month = today.getMonth().name();
+        String formattedDate = today.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT));
+        String str[] = formattedDate.split("/");
+        int day = Integer.parseInt(str[0]);
+        String year = str[2];
+        String val = month+" "+year;
+        TargetYear(val,day,2021);
+    }
 
-    //function target month
-    int TargetMonth(int month) {
-        Actions actions = new Actions(getDriver());
+    void TargetYear (String strMonthYear, int day, int year)throws Exception{
+        openCalender();
+
+        while(getYearIntValue() > year){
+            String monthyear = getDriver().findElement(By.cssSelector("div.ui-datepicker-title")).getText();
+            if(strMonthYear.equals(monthyear)){
+                break;
+            } else {
+               getDriver().findElement(By.cssSelector("a.ui-datepicker-prev")).click();
+                }
+            }
+
+        while(getYearIntValue() < year){
+            String monthyear = getDriver().findElement(By.cssSelector("div.ui-datepicker-title")).getText();
+            if(strMonthYear.equals(monthyear)){
+                break;
+            } else {
+                getDriver().findElement(By.cssSelector("a.ui-datepicker-next")).click();
+            }
+        }
+            TargetDays(day);
+        }
+
+    public int getYearIntValue(){
+        List<WebElement> yearVal = getDriver().findElements(By.cssSelector("div.ui-datepicker-title"));
+        int yearInt = 0;
+        for(WebElement w:  yearVal) {
+                  String yr = w.findElement(By.cssSelector("span.ui-datepicker-year")).getText();
+                  yearInt = Integer.parseInt(yr);
+              }
+              return yearInt;
+    }
+
+    public void openCalender (){
         getDriver().findElement(By.xpath("//input[@id='datepicker']")).click();
-        String monthEl = getDriver().findElement(By.className("ui-datepicker-month")).getText();
-        int index = -1;
-        for (int i = 0; i < monthArray.length; i++) {
-            if (monthArray[i].equals(monthEl)) {
-                index = i;
-                break;
-            }
-        }
-            while (index != month) {
-                if (index > month) {
-                    actions.click(getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-prev ui-corner-all')]"))).click().perform();
-                    break;
-                } else if (index < month) {
-                    actions.click(getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-next ui-corner-all')]"))).click().perform();
-                    break;
-                } else
-                    return index;
-            }
-
-        return index;
     }
 
-        //function target year
-        int TargetYear ( int year, int month) throws Exception{
-            getDriver().findElement(By.xpath("//input[@id='datepicker']")).click();
-
-            WebDriverWait wait = new WebDriverWait(getDriver(), 10);
-            WebElement yearValue = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ui-datepicker-year")));
-            Actions actions = new Actions(getDriver());
-            int convertToInt = Integer.parseInt(yearValue.getText());
-
-            while (true) {
-                int actualYear = convertToInt;
-                if (actualYear < year) {
-                    actions.click(getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-next ui-corner-all')]"))).click().perform();
-                    TargetMonth(month);
-                    break;
-                }
-                if (actualYear > year) {
-                    getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-prev ui-corner-all')]")).click();
-                    TargetMonth(month);
-                } else {
-                    return actualYear;
-                }
-                    break;
-            }
-           return year;
-        }
-
-        // function to change date and month
-//        void changeMonthAndYear(int month, int year) throws Exception{
-//        Actions actions = new Actions(getDriver());
-//            getDriver().findElement(By.xpath("//input[@id='datepicker']")).click();
-//
-//
-//            WebElement btnPrev =   getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-prev ui-corner-all')]"));
-//            WebElement btnNext = getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-next ui-corner-all')]"));
-//
-//            String monthEl = getDriver().findElement(By.className("ui-datepicker-month")).getText();
-//            String[] monthArray = {"January","February","March","April","May","June","July","August","September","October","November","December"};
-//
-//
-//                int index = -1;
-//                for (int i = 0; i < monthArray.length; i++) {
-//                    if (monthArray[i].equals(monthEl)) {
-//                            index = i;
-//                            break;
-//                    }}
-//            while(true) {
-//                    if((index < month)){
-//                        actions.click(btnNext).click().perform();
-//                        break;
-//                    } else if((index > month )){
-//                        actions.click(btnPrev).click().perform();
-//                        break;
-//                    }
-//                findYear(year);
-//                break;
-//            }
-//            getDriver().findElement(By.xpath("//input[@id='datepicker']")).click();
-////            while(true) {
-////                int currentYear = findYear();
-////                if (currentYear < year) {
-////                    Actions action = new Actions(getDriver());
-////                    action.build();
-////                    action.click(btnNext).click();
-////                    break;
-////                    //getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-next ui-corner-all')]")).click();
-////                } else if (currentYear > year) {
-////                    Actions action = new Actions(getDriver());
-////                    action.build();
-////                    action.click(btnPrev).click();
-////                    break;
-////                    //getDriver().findElement(By.xpath("//a[contains(@class,'ui-datepicker-prev ui-corner-all')]")).click();
-////                }
-////                break;
-////            }
-//            Thread.sleep(5000);
-//        }
-
-    private int findYear() throws Exception {
-        WebDriverWait wait = new WebDriverWait(getDriver(), 15);
-        WebElement yearElement = wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ui-datepicker-year")));
-        String year = yearElement.getText();
-        return Integer.parseInt(year);
+    public void openBrowser(){
+        getDriver().get("https://seleniumui.moderntester.pl/datepicker.php");
     }
-
 }
 
 
