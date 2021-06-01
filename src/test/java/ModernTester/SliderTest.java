@@ -25,26 +25,31 @@ public class SliderTest extends TestBase {
     }
 
 
-    private void moveSliderTo(int expectedSliderValue){
-        WebElement slider =  getDriver().findElement(By.id("custom-handle"));
+    private int moveSliderTo(int expectedSliderValue) throws Exception{
 
         int clonegetsliderValue = getsliderValue();
-
-        if(expectedSliderValue > getsliderValue()){
-            for(int i = 0; i < expectedSliderValue - clonegetsliderValue; i++){
-                slider.sendKeys(Keys.ARROW_RIGHT);
-            }
-        } else {
-            for(int i = 0; i < clonegetsliderValue - expectedSliderValue; i++){
-                slider.sendKeys(Keys.ARROW_LEFT);
+        if(!(expectedSliderValue == getsliderValue())){
+            if(expectedSliderValue > getsliderValue()){
+                for(int i = 0; i < expectedSliderValue - clonegetsliderValue; i++){
+                    keyDirection("right");
+                }
+            } else {
+                for(int i = 0; i < clonegetsliderValue - expectedSliderValue; i++){
+                   keyDirection("left");
+                }
             }
         }
         assertThat(getsliderValue(), equalTo(expectedSliderValue));
+        return getsliderValue();
     }
 
+    void keyDirection(String slider){
+        WebElement sliderEl =  getDriver().findElement(By.id("custom-handle"));
+        sliderEl.sendKeys(slider == "left" ? Keys.ARROW_LEFT : Keys.ARROW_RIGHT);
+
+    }
 
     private int getsliderValue(){
-        String slidervalue = getDriver().findElement(By.id("custom-handle")).getText();
-        return Integer.parseInt(slidervalue);
+        return Integer.parseInt(getDriver().findElement(By.id("custom-handle")).getText());
     }
 }
